@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './AdminPanel.css';
 import { seedDemoData, clearDemoData } from '../utils/seedData';
 
-function AdminPanel() {
+function AdminPanel({ departamento = 'todos', nombreDepartamento = 'General' }) {
+  const navigate = useNavigate();
   const [mensajes, setMensajes] = useState([]);
   const [filtroEmpresa, setFiltroEmpresa] = useState('todas');
   const [filtroDepartamento, setFiltroDepartamento] = useState('todos');
@@ -122,7 +123,11 @@ function AdminPanel() {
       mensaje.email.toLowerCase().includes(busqueda.toLowerCase()) ||
       mensaje.mensaje.toLowerCase().includes(busqueda.toLowerCase()) ||
       (mensaje.numeroCliente && mensaje.numeroCliente.toLowerCase().includes(busqueda.toLowerCase()));
-    return cumpleEmpresa && cumpleDepartamento && cumpleEstado && cumpleBusqueda;
+
+    // Filtrar por departamento si se especifica
+    const cumpleDepartamentoPanel = departamento === 'todos' || mensaje.departamento === departamento;
+
+    return cumpleEmpresa && cumpleDepartamento && cumpleEstado && cumpleBusqueda && cumpleDepartamentoPanel;
   });
 
   const formatearFecha = (fechaISO) => {
@@ -194,7 +199,7 @@ function AdminPanel() {
       <aside className="sidebar">
         <div className="sidebar-header">
           <h2>Sistema de Gestión</h2>
-          <p className="sidebar-subtitle">Panel Administrativo</p>
+          <p className="sidebar-subtitle">{nombreDepartamento}</p>
         </div>
 
         <nav className="sidebar-nav">
@@ -232,6 +237,11 @@ function AdminPanel() {
         </nav>
 
         <div className="sidebar-footer">
+          {departamento !== 'todos' && (
+            <button onClick={() => navigate('/admin')} className="btn-volver-sidebar" style={{marginBottom: '0.5rem'}}>
+              ← Volver a Admin Principal
+            </button>
+          )}
           <Link to="/" className="btn-volver-sidebar">
             ← Volver al sitio
           </Link>
