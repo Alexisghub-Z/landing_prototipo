@@ -251,6 +251,9 @@ function Contact() {
 
           <div className="footer-bottom">
             <p>&copy; 2024 Agroindustriales Cuatpa S.A. de C.V. Todos los derechos reservados.</p>
+            <a href="/admin" className="admin-link" title="Panel de administración">
+              ⚙️ Admin
+            </a>
           </div>
         </div>
       </footer>
