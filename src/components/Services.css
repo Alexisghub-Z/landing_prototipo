@@ -89,7 +89,54 @@
     padding: 3rem 1.5rem;
   }
 
+  .services-intro {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+
   .services-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .service-image {
+    height: 180px;
+  }
+
+  .service-content {
+    padding: 1.25rem;
+  }
+
+  .service-card h3 {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .services {
+    padding: 2.5rem 1rem;
+  }
+
+  .services-intro {
+    font-size: 1rem;
+  }
+
+  .service-image {
+    height: 160px;
+  }
+
+  .service-icon-overlay {
+    width: 50px;
+    height: 50px;
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .service-emoji {
+    font-size: 1.5rem;
+  }
+
+  .service-card h3 {
+    font-size: 1.2rem;
   }
 }
