@@ -4,7 +4,6 @@ import './Contact.css';
 function Contact() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [formData, setFormData] = useState({
-    numeroCliente: '',
     nombre: '',
     email: '',
     telefono: '',
@@ -47,9 +46,13 @@ function Contact() {
       })
     );
 
+    // Generar número de cliente automáticamente
+    const numeroCliente = `AC-${Date.now().toString().slice(-6)}`;
+
     // Crear objeto de mensaje con toda la información
     const mensaje = {
       id: Date.now(),
+      numeroCliente,
       ...formData,
       empresa: 'Agroindustriales Cuatpa', // Identificador de la empresa
       archivos: archivosBase64,
@@ -68,7 +71,6 @@ function Contact() {
 
     // Resetear formulario
     setFormData({
-      numeroCliente: '',
       nombre: '',
       email: '',
       telefono: '',
@@ -147,14 +149,6 @@ function Contact() {
                   <option value="factura">Facturación</option>
                   <option value="bancos">Información Bancaria</option>
                 </select>
-
-                <input
-                  type="text"
-                  name="numeroCliente"
-                  placeholder="Número de cliente (opcional)"
-                  value={formData.numeroCliente}
-                  onChange={handleInputChange}
-                />
 
                 <input
                   type="text"
