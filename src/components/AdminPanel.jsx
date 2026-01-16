@@ -11,10 +11,33 @@ function AdminPanel() {
   const [busqueda, setBusqueda] = useState('');
   const [mensajeSeleccionado, setMensajeSeleccionado] = useState(null);
   const [textoRespuesta, setTextoRespuesta] = useState('');
+  const [mostrarConfigCorreos, setMostrarConfigCorreos] = useState(false);
+  const [correosEmpresas, setCorreosEmpresas] = useState({});
+  const [correoTemp, setCorreoTemp] = useState('');
 
   useEffect(() => {
     cargarMensajes();
+    cargarCorreosEmpresas();
   }, []);
+
+  const cargarCorreosEmpresas = () => {
+    const correosGuardados = JSON.parse(localStorage.getItem('correosEmpresas') || '{}');
+    setCorreosEmpresas(correosGuardados);
+  };
+
+  const guardarCorreoEmpresa = (empresa, correo) => {
+    const nuevosCorreos = { ...correosEmpresas, [empresa]: correo };
+    localStorage.setItem('correosEmpresas', JSON.stringify(nuevosCorreos));
+    setCorreosEmpresas(nuevosCorreos);
+    setCorreoTemp('');
+  };
+
+  const eliminarCorreoEmpresa = (empresa) => {
+    const nuevosCorreos = { ...correosEmpresas };
+    delete nuevosCorreos[empresa];
+    localStorage.setItem('correosEmpresas', JSON.stringify(nuevosCorreos));
+    setCorreosEmpresas(nuevosCorreos);
+  };
 
   const cargarMensajes = () => {
     const mensajesGuardados = JSON.parse(localStorage.getItem('mensajes') || '[]');
@@ -58,10 +81,14 @@ function AdminPanel() {
       return;
     }
 
+    const mensaje = mensajes.find(m => m.id === id);
+    const correoEmpresa = correosEmpresas[mensaje.empresa] || 'Sin correo configurado';
+
     const nuevaRespuesta = {
       texto: textoRespuesta,
       fecha: new Date().toISOString(),
-      autor: 'Admin'
+      autor: 'Admin',
+      correoEmpresa: correoEmpresa
     };
 
     const mensajesActualizados = mensajes.map(m => {
@@ -181,7 +208,7 @@ function AdminPanel() {
               <span className="nav-icon">📈</span>
               <span>Reportes</span>
             </a>
-            <a href="#" className="nav-item">
+            <a href="#" onClick={(e) => { e.preventDefault(); setMostrarConfigCorreos(true); }} className="nav-item">
               <span className="nav-icon">⚙️</span>
               <span>Configuración</span>
             </a>
@@ -474,6 +501,11 @@ function AdminPanel() {
                           <span className="respuesta-autor">👤 {respuesta.autor}</span>
                           <span className="respuesta-fecha">{formatearFecha(respuesta.fecha)}</span>
                         </div>
+                        {respuesta.correoEmpresa && (
+                          <div className="respuesta-correo-enviado">
+                            <small>Desde: {respuesta.correoEmpresa}</small>
+                          </div>
+                        )}
                         <p className="respuesta-texto">{respuesta.texto}</p>
                       </div>
                     ))}
@@ -484,6 +516,19 @@ function AdminPanel() {
               {/* Nueva Respuesta */}
               <div className="detail-section">
                 <h4>Responder al Cliente</h4>
+                {correosEmpresas[mensajeSeleccionado.empresa] ? (
+                  <div className="correo-respuesta-info">
+                    <span className="correo-label">Responder desde:</span>
+                    <span className="correo-badge">✉️ {correosEmpresas[mensajeSeleccionado.empresa]}</span>
+                  </div>
+                ) : (
+                  <div className="correo-respuesta-warning">
+                    ⚠️ No hay correo configurado para esta empresa.
+                    <button onClick={() => setMostrarConfigCorreos(true)} className="btn-link">
+                      Configurar ahora
+                    </button>
+                  </div>
+                )}
                 <div className="respuesta-form">
                   <textarea
                     value={textoRespuesta}
@@ -504,6 +549,70 @@ function AdminPanel() {
           </div>
         )}
       </main>
+
+      {/* Modal de Configuración de Correos */}
+      {mostrarConfigCorreos && (
+        <div className="modal-overlay" onClick={() => setMostrarConfigCorreos(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>⚙️ Configuración de Correos por Empresa</h2>
+              <button onClick={() => setMostrarConfigCorreos(false)} className="btn-close-modal">
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-description">
+                Configura el correo electrónico desde el cual se enviarán las respuestas para cada empresa.
+              </p>
+
+              <div className="correos-list">
+                {obtenerEmpresas().map(empresa => (
+                  <div key={empresa} className="correo-item">
+                    <div className="correo-info">
+                      <strong>{empresa}</strong>
+                      {correosEmpresas[empresa] ? (
+                        <div className="correo-actual">
+                          <span className="correo-email">✉️ {correosEmpresas[empresa]}</span>
+                          <button
+                            onClick={() => eliminarCorreoEmpresa(empresa)}
+                            className="btn-eliminar-correo"
+                            title="Eliminar correo"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="correo-sin-configurar">Sin correo configurado</span>
+                      )}
+                    </div>
+                    <div className="correo-form-inline">
+                      <input
+                        type="email"
+                        placeholder="correo@empresa.com"
+                        value={correoTemp}
+                        onChange={(e) => setCorreoTemp(e.target.value)}
+                        className="input-correo"
+                      />
+                      <button
+                        onClick={() => {
+                          if (correoTemp.trim() && correoTemp.includes('@')) {
+                            guardarCorreoEmpresa(empresa, correoTemp);
+                          } else {
+                            alert('Por favor ingresa un correo válido');
+                          }
+                        }}
+                        className="btn-guardar-correo"
+                      >
+                        {correosEmpresas[empresa] ? '✏️ Actualizar' : '➕ Agregar'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
