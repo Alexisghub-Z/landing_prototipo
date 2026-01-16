@@ -3,10 +3,91 @@ import './Contact.css';
 
 function Contact() {
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [formData, setFormData] = useState({
+    numeroCliente: '',
+    nombre: '',
+    email: '',
+    telefono: '',
+    tipoSolicitud: 'general',
+    mensaje: ''
+  });
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setSelectedFiles(files);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Convertir archivos a base64
+    const archivosBase64 = await Promise.all(
+      selectedFiles.map(file => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            resolve({
+              nombre: file.name,
+              tamaño: file.size,
+              tipo: file.type,
+              data: reader.result
+            });
+          };
+          reader.readAsDataURL(file);
+        });
+      })
+    );
+
+    // Crear objeto de mensaje con toda la información
+    const mensaje = {
+      id: Date.now(),
+      ...formData,
+      archivos: archivosBase64,
+      fecha: new Date().toISOString(),
+      departamento: getDepartamento(formData.tipoSolicitud),
+      estado: 'pendiente'
+    };
+
+    // Guardar en localStorage
+    const mensajesGuardados = JSON.parse(localStorage.getItem('mensajes') || '[]');
+    mensajesGuardados.push(mensaje);
+    localStorage.setItem('mensajes', JSON.stringify(mensajesGuardados));
+
+    // Mostrar mensaje de éxito
+    setShowSuccess(true);
+
+    // Resetear formulario
+    setFormData({
+      numeroCliente: '',
+      nombre: '',
+      email: '',
+      telefono: '',
+      tipoSolicitud: 'general',
+      mensaje: ''
+    });
+    setSelectedFiles([]);
+
+    // Ocultar mensaje de éxito después de 3 segundos
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const getDepartamento = (tipo) => {
+    const departamentos = {
+      'cotizacion': 'Ventas',
+      'factura': 'Facturación',
+      'bancos': 'Finanzas',
+      'general': 'General'
+    };
+    return departamentos[tipo] || 'General';
   };
 
   return (
@@ -45,12 +126,66 @@ function Contact() {
             </div>
 
             <div className="contact-form-wrapper">
-              <form className="contact-form">
+              {showSuccess && (
+                <div className="success-message">
+                  ¡Mensaje enviado exitosamente! Nos pondremos en contacto pronto.
+                </div>
+              )}
+              <form className="contact-form" onSubmit={handleSubmit}>
                 <h3>Envíanos un mensaje</h3>
-                <input type="text" placeholder="Nombre completo" required />
-                <input type="email" placeholder="Correo electrónico" required />
-                <input type="tel" placeholder="Teléfono" />
-                <textarea placeholder="Mensaje" rows="5" required></textarea>
+
+                <select
+                  name="tipoSolicitud"
+                  value={formData.tipoSolicitud}
+                  onChange={handleInputChange}
+                  className="form-select"
+                  required
+                >
+                  <option value="general">Consulta General</option>
+                  <option value="cotizacion">Solicitud de Cotización</option>
+                  <option value="factura">Facturación</option>
+                  <option value="bancos">Información Bancaria</option>
+                </select>
+
+                <input
+                  type="text"
+                  name="numeroCliente"
+                  placeholder="Número de cliente (opcional)"
+                  value={formData.numeroCliente}
+                  onChange={handleInputChange}
+                />
+
+                <input
+                  type="text"
+                  name="nombre"
+                  placeholder="Nombre completo"
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  required
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Correo electrónico"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                />
+                <input
+                  type="tel"
+                  name="telefono"
+                  placeholder="Teléfono"
+                  value={formData.telefono}
+                  onChange={handleInputChange}
+                />
+                <textarea
+                  name="mensaje"
+                  placeholder="Mensaje"
+                  rows="5"
+                  value={formData.mensaje}
+                  onChange={handleInputChange}
+                  required
+                ></textarea>
                 <div className="file-upload">
                   <label htmlFor="file-input" className="file-label">
                     <span className="file-icon">📎</span>
