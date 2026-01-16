@@ -10,6 +10,7 @@ function AdminPanel() {
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
   const [mensajeSeleccionado, setMensajeSeleccionado] = useState(null);
+  const [textoRespuesta, setTextoRespuesta] = useState('');
 
   useEffect(() => {
     cargarMensajes();
@@ -49,6 +50,40 @@ function AdminPanel() {
     if (mensajeSeleccionado?.id === id) {
       setMensajeSeleccionado({ ...mensajeSeleccionado, departamento: nuevoDepartamento });
     }
+  };
+
+  const enviarRespuesta = (id) => {
+    if (!textoRespuesta.trim()) {
+      alert('Por favor escribe una respuesta');
+      return;
+    }
+
+    const nuevaRespuesta = {
+      texto: textoRespuesta,
+      fecha: new Date().toISOString(),
+      autor: 'Admin'
+    };
+
+    const mensajesActualizados = mensajes.map(m => {
+      if (m.id === id) {
+        const respuestas = m.respuestas || [];
+        return { ...m, respuestas: [...respuestas, nuevaRespuesta] };
+      }
+      return m;
+    });
+
+    localStorage.setItem('mensajes', JSON.stringify(mensajesActualizados.reverse()));
+    setMensajes(mensajesActualizados);
+
+    if (mensajeSeleccionado?.id === id) {
+      const respuestas = mensajeSeleccionado.respuestas || [];
+      setMensajeSeleccionado({
+        ...mensajeSeleccionado,
+        respuestas: [...respuestas, nuevaRespuesta]
+      });
+    }
+
+    setTextoRespuesta('');
   };
 
   const mensajesFiltrados = mensajes.filter(mensaje => {
@@ -425,6 +460,44 @@ function AdminPanel() {
                       <option value="General">General</option>
                     </select>
                   </div>
+                </div>
+              </div>
+
+              {/* Historial de Respuestas */}
+              {mensajeSeleccionado.respuestas && mensajeSeleccionado.respuestas.length > 0 && (
+                <div className="detail-section">
+                  <h4>Historial de Respuestas ({mensajeSeleccionado.respuestas.length})</h4>
+                  <div className="respuestas-list">
+                    {mensajeSeleccionado.respuestas.map((respuesta, idx) => (
+                      <div key={idx} className="respuesta-item">
+                        <div className="respuesta-header">
+                          <span className="respuesta-autor">👤 {respuesta.autor}</span>
+                          <span className="respuesta-fecha">{formatearFecha(respuesta.fecha)}</span>
+                        </div>
+                        <p className="respuesta-texto">{respuesta.texto}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Nueva Respuesta */}
+              <div className="detail-section">
+                <h4>Responder al Cliente</h4>
+                <div className="respuesta-form">
+                  <textarea
+                    value={textoRespuesta}
+                    onChange={(e) => setTextoRespuesta(e.target.value)}
+                    placeholder="Escribe tu respuesta aquí..."
+                    rows="4"
+                    className="respuesta-textarea"
+                  />
+                  <button
+                    onClick={() => enviarRespuesta(mensajeSeleccionado.id)}
+                    className="btn-enviar-respuesta"
+                  >
+                    📤 Enviar Respuesta
+                  </button>
                 </div>
               </div>
             </div>
