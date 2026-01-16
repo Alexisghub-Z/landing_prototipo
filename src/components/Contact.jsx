@@ -51,6 +51,7 @@ function Contact() {
     const mensaje = {
       id: Date.now(),
       ...formData,
+      empresa: 'Agroindustriales Cuatpa', // Identificador de la empresa
       archivos: archivosBase64,
       fecha: new Date().toISOString(),
       departamento: getDepartamento(formData.tipoSolicitud),
